@@ -16,6 +16,7 @@ type Tree a
 ;;; A tree is e, be, bb/3, b/3, r/3 or rr/3.
 
 ;;; --- balance_b_r_r ---
+;;; Eliminate red-red violations.
 
 balance_b_r_r(
     b(r(r(A, X, B), Y, C), Z, D),
@@ -37,12 +38,12 @@ balance_b_r_r(
 ;;; --- balance_bb_r_r ---
 
 balance_bb_r_r(
-    bb( r(r(A, X, B), Y, C), Z, D ),
-    b( b(A, X, B), Y, b(C, Z, D) )
+    bb(r(r(A, X, B), Y, C), Z, D),
+    b(b(A, X, B), Y, b(C, Z, D))
 ).
 balance_bb_r_r(
-    bb( r(A, X, r(B, Y, C)), Z, D ),
-    b( b(A, X, B), Y, b(C, Z, D) )
+    bb(r(A, X, r(B, Y, C)), Z, D),
+    b(b(A, X, B), Y, b(C, Z, D))
 ).
 balance_bb_r_r(
     bb( A, X, r(r(B, Y, C), Z, D) ),
@@ -56,14 +57,14 @@ balance_bb_r_r(
 ;;; --- balance_bb_rr ---
 
 balance_bb_rr(
-    bb( rr(b(A, W, B), X, b(C, Y, Z)), Z, E),
-    b( Q, Y, b(D, Z, E) )
+    bb(rr(b(A, W, B), X, b(C, Y, Z)), Z, E),
+    b(Q, Y, b(D, Z, E))
 ) :-
     balance( b(r(A, W, B), X, C), Q ).
 
 balance_bb_rr(
-    bb( A, W, rr(b(B, X, C), Y, b(D, Z, E)) ),
-    b( b(A, W, B), X, R)
+    bb(A, W, rr(b(B, X, C), Y, b(D, Z, E))),
+    b(b(A, W, B), X, R)
 ) :-
     balance( b(C, Y, r(D, Z, E)), R ).
 
@@ -86,20 +87,20 @@ decr( r(A, X, B), rr(A, X, B) ).
 
 ;;; --- bubble BE and BB ---
 
-bubble_be_and_bb( r(b(A, X, B), Y, be), R ) :- balance( b( r(A, X, B), Y, E ), R ).
-bubble_be_and_bb( b(b(A, X, B), Y, be), R ) :- balance( bb( r(A, X, B), Y, E ), R ).
-bubble_be_and_bb( b(r(A, X, B), Y, be), R ) :- balance( bb( rr(A, X, B), Y, E ), R ).
+bubble( r(b(A, X, B), Y, be), R ) :- balance( b( r(A, X, B), Y, E ), R ).
+bubble( b(b(A, X, B), Y, be), R ) :- balance( bb( r(A, X, B), Y, E ), R ).
+bubble( b(r(A, X, B), Y, be), R ) :- balance( bb( rr(A, X, B), Y, E ), R ).
 
-bubble_be_and_bb( r(be, Y, b(C, Z, D)), R ) :- balance( b( r(A, X, B), Y, E ), R ).
-bubble_be_and_bb( b(be, Y, b(C, Z, D)), R ) :- balance( bb( r(A, X, B), Y, E ), R ).
-bubble_be_and_bb( b(be, Y, r(C, Z, D)), R ) :- balance( bb( rr(A, X, B), Y, E ), R ).
+bubble( r(be, Y, b(C, Z, D)), R ) :- balance( b( r(A, X, B), Y, E ), R ).
+bubble( b(be, Y, b(C, Z, D)), R ) :- balance( bb( r(A, X, B), Y, E ), R ).
+bubble( b(be, Y, r(C, Z, D)), R ) :- balance( bb( rr(A, X, B), Y, E ), R ).
 
-bubble_be_and_bb( r( b(A, X, B), Y, bb(C, Z, D) ), R ) :- balance( b( r(A, X, B), Y, b(C, D, E) ), R).
-bubble_be_and_bb( r( bb(A, X, B), Y, b(C, Z, D) ), R ) :- balance( b( bb(A, X, B), Y, b(C, D, E) ), R).
-bubble_be_and_bb( b( b(A, X, B), Y, bb(C, Z, D) ), R ) :- balance( bb( r(A, X, B), Y, b(C, D, E) ), R).
-bubble_be_and_bb( b( bb(A, X, B), Y, b(C, Z, D) ), R ) :- balance( bb( b(A, X, B), Y, r(C, D, E) ), R).
-bubble_be_and_bb( b( r(A, X, B), Y, bb(C, Z, D) ), R ) :- balance( bb( rr(A, X, B), Y, b(C, D, E) ), R).
-bubble_be_and_bb( b( bb(A, X, B), Y, r(C, Z, D) ), R ) :- balance( bb( b(A, X, B), Y, rr(C, D, E) ), R).
+bubble( r( b(A, X, B), Y, bb(C, Z, D) ), R ) :- balance( b( r(A, X, B), Y, b(C, D, E) ), R).
+bubble( r( bb(A, X, B), Y, b(C, Z, D) ), R ) :- balance( b( bb(A, X, B), Y, b(C, D, E) ), R).
+bubble( b( b(A, X, B), Y, bb(C, Z, D) ), R ) :- balance( bb( r(A, X, B), Y, b(C, D, E) ), R).
+bubble( b( bb(A, X, B), Y, b(C, Z, D) ), R ) :- balance( bb( b(A, X, B), Y, r(C, D, E) ), R).
+bubble( b( r(A, X, B), Y, bb(C, Z, D) ), R ) :- balance( bb( rr(A, X, B), Y, b(C, D, E) ), R).
+bubble( b( bb(A, X, B), Y, r(C, Z, D) ), R ) :- balance( bb( b(A, X, B), Y, rr(C, D, E) ), R).
 
 ;;; --- Removal ---
 
@@ -126,7 +127,7 @@ rem( N, LHS, RHS ) :-
     N < Y,
     !,
     rem( N, L, Lrem ),
-    bubble_bb_and_be( Lrem, Bubbled ),
+    bubble( Lrem, Bubbled ),
     New =.. [C, Bubbled, Y, R],
     balance( New, RHS ).
 
@@ -135,7 +136,7 @@ rem( N, LHS, RHS ) :-
     N > Y,
     !,
     rem( N, R, Rrem ),
-    bubble_bb_and_be( Rrem, Bubbled ),
+    bubble( Rrem, Bubbled ),
     New =.. [C, L, Y, Bubbled],
     balance( New, RHS ).
 
