@@ -211,11 +211,11 @@ bubble( T, T ).
 rem( N, e, e ) :- !.
 
 ;;; 0-children.
-rem( N, r(e, N, e), b ) :- !.           ;;; FIX
+rem( N, r(e, N, e), e ) :- !.           ;;; FIX
 rem( N, T, T ) :- T = r(e, _, e), !.
 rem( N, b(e, N, e), be ) :- !.          ;;; FIX
-
-rem( N, T, T ) :- T = b(e, _, e), !.
+rem( N, T, T ) :-
+T = b(e, _, e), !.
 
 ;;; 1-child.
 rem( N, b(r(e, X, e), N, e), b(e, X, e) ) :- !.
@@ -269,10 +269,16 @@ remove( X, Tree, Result ) :-
     Tree2 =.. [_, L, Y, R],
     Result =.. [b, L, Y, R].
 
-bad( b(r(e, 20, e), 20, e) ).
-ex1( b(r(e, 20, e), 30, e) ).
-ex2( b(r(e, 20, e), 30, r(e, 40, e)) ).
+;;; --- Examples ---
 
-?- ex2(T20), remove(20, T20, Result).
-?- ex2(T30), remove(30, T30, Result).
-?- ex2(T40), remove(40, T40, Result).
+bad( dupes, b(r(e, 20, e), 20, e) ).
+bad( redredviolation, b(r(e, 10, r(e, 20, e))) ).
+
+
+ok( 1, b(r(e, 20, e), 30, e) ).
+ok( 2, b(r(e, 20, e), 30, r(e, 40, e)) ).
+
+
+?- Name = 2, ok(Name, T), remove(20, T, Result), write((Name, 20, Result)), nl, valid(Result), write('VALID'), nl.
+?- Name = 2, ok(Name, T), remove(30, T, Result), write((Name, 30, Result)), nl, valid(Result), write('VALID'), nl.
+?- Name = 2, ok(Name, T), remove(40, T, Result), write((Name, 40, Result)), nl, valid(Result), write('VALID'), nl.
