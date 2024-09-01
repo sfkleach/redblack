@@ -81,7 +81,7 @@ base_colour( rr(_, _, _), r ).
 weight( e, 0 ).
 weight( be, 1 ).
 weight( T, W ) :-
-    W =.. [C, L, _, R],
+    T =.. [C, L, _, R],
     weight( L, Lw ),
     weight( R, Rw ),
     !,
