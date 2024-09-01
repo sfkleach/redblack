@@ -47,14 +47,19 @@ ordered( T ) :-
     ordered( T, N, Lmin, Lmax ).
 
 ;;; ordered( in Tree, in DefaultValue, out TreeMin, out TreeMax )
-ordered( b, N, N, N ).
+ordered( e, N, N, N ).
 ordered( be, N, N, N ).
 ordered( T, _, Lmin, Lmax ) :-
     T =.. [C, L, N, R],
+    not( same_value( N, L ) ),
+    not( same_value( N, R ) ).
     ordered( L, N, Lmin, Lmax ),
     Lmax =< N,
     ordered(R, N, Rmin, Rmax ),
     N =< Rmin.
+
+same_value( N, T ) :-
+    T =.. [_, _, N, _].
 
 r_r_violation( T ) :-
     T =.. [_, L, _, R],
