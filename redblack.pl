@@ -15,6 +15,8 @@ type Tree a
 ;;; Colour is one of bb, b, r, rr.
 ;;; A tree is e, be, bb/3, b/3, r/3 or rr/3.
 
+;;; Consider - e0/0, e1/0, b2/3, b1/3, r0/3, r_1/3
+
 ;;; --- balance_b_r_r ---
 ;;; Eliminate red-red violations.
 
@@ -56,17 +58,33 @@ balance_bb_r_r(
 
 ;;; --- balance_bb_rr ---
 
-balance_bb_rr(
-    bb(rr(b(A, W, B), X, b(C, Y, Z)), Z, E),
-    b(Q, Y, b(D, Z, E))
-) :-
-    balance( b(r(A, W, B), X, C), Q ).
+/*
+balance_BB_RR : BalanceMaybe comparable
+balance_BB_RR color l val r =
+  case (color, (l, val, r)) of
+    (BB, (T RR (T B a w b) x (T B c y d), z, e)) -> Just <| T B (balance B (T R a w b) x c) y (T B d z e)
+    (BB, (a, w, T RR (T B b x c) y (T B d z e))) -> Just <| T B (T B a w b) x (balance B c y (T R d z e))
+    _                                            -> Nothing
+*/
+
+redden(b(A, W, B), r(A, W, B)).
+redden(e, e).                       ;;; FIX
 
 balance_bb_rr(
-    bb(A, W, rr(b(B, X, C), Y, b(D, Z, E))),
+    bb(rr(BAWB, X, b(C, Y, Z)), Z, E),
+    b(Q, Y, b(D, Z, E))
+) :-
+    !,
+    redden(BAWB, RAWB),
+    balance( b(RAWB, X, C), Q ).
+
+balance_bb_rr(
+    bb(A, W, rr(b(B, X, C), Y, BDZE)),
     b(b(A, W, B), X, R)
 ) :-
-    balance( b(C, Y, r(D, Z, E)), R ).
+    !,
+    redden(BDZE, RDZE),
+    balance( RDZE, R ).
 
 ;;; --- balance ---
 
@@ -87,30 +105,38 @@ decr( r(A, X, B), rr(A, X, B) ).
 
 ;;; --- bubble BE and BB ---
 
-bubble( r(b(A, X, B), Y, be), R ) :- balance( b( r(A, X, B), Y, E ), R ).
-bubble( b(b(A, X, B), Y, be), R ) :- balance( bb( r(A, X, B), Y, E ), R ).
-bubble( b(r(A, X, B), Y, be), R ) :- balance( bb( rr(A, X, B), Y, E ), R ).
+;;; BE
 
-bubble( r(be, Y, b(C, Z, D)), R ) :- balance( b( r(A, X, B), Y, E ), R ).
-bubble( b(be, Y, b(C, Z, D)), R ) :- balance( bb( r(A, X, B), Y, E ), R ).
-bubble( b(be, Y, r(C, Z, D)), R ) :- balance( bb( rr(A, X, B), Y, E ), R ).
+bubble( r(b(A, X, B), Y, be), R ) :- !, balance( b( r(A, X, B), Y, E ), R ).
+bubble( b(b(A, X, B), Y, be), R ) :- !, balance( bb( r(A, X, B), Y, E ), R ).
+bubble( b(r(A, X, B), Y, be), R ) :- !, balance( bb( rr(A, X, B), Y, E ), R ).
 
-bubble( r( b(A, X, B), Y, bb(C, Z, D) ), R ) :- balance( b( r(A, X, B), Y, b(C, D, E) ), R).
-bubble( r( bb(A, X, B), Y, b(C, Z, D) ), R ) :- balance( b( bb(A, X, B), Y, b(C, D, E) ), R).
-bubble( b( b(A, X, B), Y, bb(C, Z, D) ), R ) :- balance( bb( r(A, X, B), Y, b(C, D, E) ), R).
-bubble( b( bb(A, X, B), Y, b(C, Z, D) ), R ) :- balance( bb( b(A, X, B), Y, r(C, D, E) ), R).
-bubble( b( r(A, X, B), Y, bb(C, Z, D) ), R ) :- balance( bb( rr(A, X, B), Y, b(C, D, E) ), R).
-bubble( b( bb(A, X, B), Y, r(C, Z, D) ), R ) :- balance( bb( b(A, X, B), Y, rr(C, D, E) ), R).
+bubble( r(be, Y, b(C, Z, D)), R ) :- !, balance( b(e, Y, rr(C, Z, D)), R ).
+bubble( b(be, Y, b(C, Z, D)), R ) :- !, balance( bb(e, Y, r(C, Z, D)), R).
+bubble( b(be, Y, r(C, Z, D)), R ) :- !, balance( bb(e, Y, rr(C, Z, D)), R ).
+
+;;; BB
+
+bubble( r( b(A, X, B), Y, bb(C, Z, D) ), R ) :- !, balance( b( r(A, X, B), Y, b(C, D, E) ), R).
+bubble( r( bb(A, X, B), Y, b(C, Z, D) ), R ) :- !, balance( b( bb(A, X, B), Y, b(C, D, E) ), R).
+bubble( b( b(A, X, B), Y, bb(C, Z, D) ), R ) :- !, balance( bb( r(A, X, B), Y, b(C, D, E) ), R).
+bubble( b( bb(A, X, B), Y, b(C, Z, D) ), R ) :- !, balance( bb( b(A, X, B), Y, r(C, D, E) ), R).
+bubble( b( r(A, X, B), Y, bb(C, Z, D) ), R ) :- !, balance( bb( rr(A, X, B), Y, b(C, D, E) ), R).
+bubble( b( bb(A, X, B), Y, r(C, Z, D) ), R ) :- !, balance( bb( b(A, X, B), Y, rr(C, D, E) ), R).
+
+;;; Otherwise
+bubble( T, T ).
 
 ;;; --- Removal ---
 
 rem( N, e, e ) :- !.
 
 ;;; 0-children.
-rem( N, r(e, N, e), be ) :- !.
-rem( N, r(e, X, e), r(e, X, e) ) :- X \= N, !.
-rem( N, b(e, N, e), bb(e, N, e) ) :- !.
-rem( N, b(e, X, e), b(e, X, e) ) :- X \= N, !.
+rem( N, r(e, N, e), b ) :- !.           ;;; FIX
+rem( N, T, T ) :- T = r(e, _, e), !.
+rem( N, b(e, N, e), be ) :- !.          ;;; FIX
+
+rem( N, T, T ) :- T = b(e, _, e), !.
 
 ;;; 1-child.
 rem( N, b(r(e, X, e), N, e), b(e, X, e) ) :- !.
@@ -164,4 +190,72 @@ remove( X, Tree, Result ) :-
     Tree2 =.. [_, L, Y, R],
     Result =.. [b, L, Y, R].
 
+child( T, Child ) :-
+    T =.. [ _, L, _, R ],
+    (C = L; C = R).
+
+base_colour( e, b ).
+base_colour( be, b ).
+base_colour( b(_, _, _), b ).
+base_colour( bb(_, _, _), b ).
+base_colour( r(_, _, _), r ).
+base_colour( rr(_, _, _), r ).
+
+redred( T ) :-
+    color( T, r ),
+    child( T, Child ),
+    base_colour( Child, r ).
+
+valid( e ).
+valid( be ).
+valid( T ) :-
+    T =.. [ C, L, N, R ],
+    not( redred( T ) ),
+    valid( L ),
+    valid( R ),
+    lt(L, N),
+    gt(R, N),
+    weight( L, Lw ),
+    weight( R, Rw ),
+    !,
+    Lw = Rw.
+
+weight( e, 0 ).
+weight( be, 1 ).
+weight( T, W ) :-
+    W =.. [C, L, _, R],
+    weight( L, Lw ),
+    weight( R, Rw ),
+    !,
+    Lw = Rw,
+    colour_weight( C, Cw ),
+    W is Lw + Cw.
+
+colour_weight( b, 1 ).
+colour_weight( bb, 2 ).
+colour_weight( r, 0 ).
+colour_weight( rr, -1 ).
+
+lt( e, _ ).
+lt( be, _ ).
+lt( T, N ) :-
+    T =.. [C, L, X, R],
+    X < N,
+    lt( L, N ),
+    lt( R, N ).
+
+gt( e, _ ).
+gt( be, _ ).
+gt( T, N ) :-
+    T =.. [C, L, X, R],
+    X > N,
+    gt( L, N ),
+    gt( R, N ).
+
+
 ex1( b(r(e, 20, e), 30, e) ).
+ex2( b(r(e, 20, e), 30, r(e, 40, e)) ).
+
+?- ex2(T20), remove(20, T20, Result).
+?- ex2(T30), remove(30, T30, Result).
+?- ex2(T40), remove(40, T40, Result).
