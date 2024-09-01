@@ -95,7 +95,6 @@ colour_weight( r, 0 ).
 colour_weight( rr, -1 ).
 
 
-
 ;;; --- balance_b_r_r ---
 ;;; Eliminate red-red violations.
 
@@ -173,7 +172,7 @@ balance( P, Q ) :- balance_bb_rr( P, Q ), !.
 balance( P, P ).
 
 ;;; --- unused ---
-
+/*
 incr( b( A, X, B ), bb( A, X, B ) ).
 incr( r( A, X, B ), b( A, X, B) ).
 incr( rr( A, X, B ), r( A, X, B ) ).
@@ -181,6 +180,7 @@ incr( rr( A, X, B ), r( A, X, B ) ).
 decr( bb(A, X, B), b(A, X, B) ).
 decr( b( A, X, B ), r( A, X, B ) ).
 decr( r(A, X, B), rr(A, X, B) ).
+*/
 
 ;;; --- bubble BE and BB ---
 
