@@ -52,7 +52,7 @@ ordered( be, N, N, N ).
 ordered( T, _, Lmin, Lmax ) :-
     T =.. [C, L, N, R],
     not( same_value( N, L ) ),
-    not( same_value( N, R ) ).
+    not( same_value( N, R ) ),
     ordered( L, N, Lmin, Lmax ),
     Lmax =< N,
     ordered(R, N, Rmin, Rmax ),
@@ -269,6 +269,7 @@ remove( X, Tree, Result ) :-
     Tree2 =.. [_, L, Y, R],
     Result =.. [b, L, Y, R].
 
+bad( b(r(e, 20, e), 20, e) ).
 ex1( b(r(e, 20, e), 30, e) ).
 ex2( b(r(e, 20, e), 30, r(e, 40, e)) ).
 
