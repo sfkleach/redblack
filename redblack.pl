@@ -17,6 +17,80 @@ type Tree a
 
 ;;; Consider - e0/0, e1/0, b2/3, b1/3, r0/3, r_1/3
 
+;;; --- Invariants ---
+
+valid( T ) :-
+    only_r_and_b( T ),
+    tree_invariant( T ).
+
+tree_invariant( T ) :-
+    ordered( T ),
+    not( r_r_violation( T ) ),
+    weight( T, _ ).
+
+
+
+only_r_and_b( e ).
+only_r_and_b( r( L, _, R ) ) :-
+    only_r_and_b( L ),
+    only_r_and_b( R ).
+only_r_and_b( b( L, _, R ) ) :-
+    only_r_and_b( L ),
+    only_r_and_b( R ).
+
+;;; ordered( in T )
+
+ordered( e ).
+ordered( be ).
+ordered( T ) :-
+    T =.. [_, _, N, _],
+    ordered( T, N, Lmin, Lmax ).
+
+;;; ordered( in Tree, in DefaultValue, out TreeMin, out TreeMax )
+ordered( b, N, N, N ).
+ordered( be, N, N, N ).
+ordered( T, _, Lmin, Lmax ) :-
+    T =.. [C, L, N, R],
+    ordered( L, N, Lmin, Lmax ),
+    Lmax =< N,
+    ordered(R, N, Rmin, Rmax ),
+    N =< Rmin.
+
+r_r_violation( T ) :-
+    T =.. [_, L, _, R],
+    base_color( T, r ),
+    ( base_color( R, r ); base_color( L, r ) ),
+    !.
+r_r_violation( T ) :-
+    T =.. [_, L, _, R],
+    ( r_r_violation( L ); r_r_violation( R ) ).
+
+
+base_colour( e, b ).
+base_colour( be, b ).
+base_colour( b(_, _, _), b ).
+base_colour( bb(_, _, _), b ).
+base_colour( r(_, _, _), r ).
+base_colour( rr(_, _, _), r ).
+
+weight( e, 0 ).
+weight( be, 1 ).
+weight( T, W ) :-
+    W =.. [C, L, _, R],
+    weight( L, Lw ),
+    weight( R, Rw ),
+    !,
+    Lw = Rw,
+    colour_weight( C, Cw ),
+    W is Lw + Cw.
+
+colour_weight( b, 1 ).
+colour_weight( bb, 2 ).
+colour_weight( r, 0 ).
+colour_weight( rr, -1 ).
+
+
+
 ;;; --- balance_b_r_r ---
 ;;; Eliminate red-red violations.
 
@@ -189,69 +263,6 @@ remove( X, Tree, Result ) :-
     rem( X, Tree, Tree2 ),
     Tree2 =.. [_, L, Y, R],
     Result =.. [b, L, Y, R].
-
-child( T, Child ) :-
-    T =.. [ _, L, _, R ],
-    (C = L; C = R).
-
-base_colour( e, b ).
-base_colour( be, b ).
-base_colour( b(_, _, _), b ).
-base_colour( bb(_, _, _), b ).
-base_colour( r(_, _, _), r ).
-base_colour( rr(_, _, _), r ).
-
-redred( T ) :-
-    color( T, r ),
-    child( T, Child ),
-    base_colour( Child, r ).
-
-valid( e ).
-valid( be ).
-valid( T ) :-
-    T =.. [ C, L, N, R ],
-    not( redred( T ) ),
-    valid( L ),
-    valid( R ),
-    lt(L, N),
-    gt(R, N),
-    weight( L, Lw ),
-    weight( R, Rw ),
-    !,
-    Lw = Rw.
-
-weight( e, 0 ).
-weight( be, 1 ).
-weight( T, W ) :-
-    W =.. [C, L, _, R],
-    weight( L, Lw ),
-    weight( R, Rw ),
-    !,
-    Lw = Rw,
-    colour_weight( C, Cw ),
-    W is Lw + Cw.
-
-colour_weight( b, 1 ).
-colour_weight( bb, 2 ).
-colour_weight( r, 0 ).
-colour_weight( rr, -1 ).
-
-lt( e, _ ).
-lt( be, _ ).
-lt( T, N ) :-
-    T =.. [C, L, X, R],
-    X < N,
-    lt( L, N ),
-    lt( R, N ).
-
-gt( e, _ ).
-gt( be, _ ).
-gt( T, N ) :-
-    T =.. [C, L, X, R],
-    X > N,
-    gt( L, N ),
-    gt( R, N ).
-
 
 ex1( b(r(e, 20, e), 30, e) ).
 ex2( b(r(e, 20, e), 30, r(e, 40, e)) ).
