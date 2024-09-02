@@ -29,7 +29,6 @@ tree_invariant( T ) :-
     weight( T, _ ).
 
 
-
 only_r_and_b( e ).
 only_r_and_b( r( L, _, R ) ) :-
     only_r_and_b( L ),
