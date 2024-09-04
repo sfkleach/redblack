@@ -1,15 +1,19 @@
 ;;; Node structure for the Red-Black Tree
-defclass Node {
+defclass node {
     node_key,
     node_value,
-    color,
-    left,
-    right,
-    parent
+    node_weight: 8,
+    node_left,
+    node_right
 };
 
+define node_colour( node );
+    lvars w = node.node_weight;
+
+enddefine;
+
 define newNode(key, value, colour);
-    consNode( key, value, colour, false, false, false ) 
+    consNode( key, value, colour, false, false, false )
 enddefine;
 
 procedure( node );
@@ -37,7 +41,7 @@ enddefine;
 
 define show(tree);
     define lconstant procedure show_node( level, node );
-        repeat level times pr(' ') endrepeat;    
+        repeat level times pr(' ') endrepeat;
         if node then
             pr( node.node_key );
             pr( ': ' );
@@ -121,7 +125,7 @@ define fixTree(node, tree);
             "BLACK" -> P.color;
             "BLACK" -> u.color;
             "RED" -> G.color;
-            G -> node; 
+            G -> node;
         else
             [fix ^node]  =>
             if node == P.R then
