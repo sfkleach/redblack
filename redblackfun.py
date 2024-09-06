@@ -3,57 +3,87 @@ A functional implementation of a red-black tree.
 This is a work in progress and is not yet complete. 
 '''
 
+import abc
+
+@abc.abtractclass
 class Node:
 
-    def __init__(self, key, *, left=None, right=None):
-        self.key = key
-        self.left = left or EMPTY
-        self.right = right or EMPTY
-        self.bits = 0 if key is None else 1
-        
-    def is_empty(self):
-        return (self.bits & 0b1) == 0
+    @abc.abstractmethod
+    def colour(self): ...
+    
+    @abc.abstractmethod
+    def kind(self): ...
+
+    @abc.abstractmethod
+    def weight(self): ...
+
+
+class EmptyNode( Node ):
+
+    def weight():
+        return 0
+    
+    def colour(self):
+        return "black"
+    
+    def kind(self):
+        return "empty"
+
+class BlackEmptyNode( Node ):
+
+    def weight():
+        return 1
+
+    def colour(self):
+        return "black"
+    
+    def kind(self):
+        return "blackempty"
+
+class BinaryNode(Node):
+
+    def __init__(self, key, *, left: Node, right: Node, weight: int):
+        self._key = key
+        self.left: Node = left
+        self.right: Node = right
+        assert 0 <= weight <= 2
+        self._weight = weight
     
     @property
+    def key(self):
+        return self._key
+
+    @property
     def weight(self):
-        self.bits >> 1 
+        return self._weight
 
     @weight.setter
     def weight(self, value):
-        assert -1 <= value <= 2
-        self.bits = (self.bits & 0b1) | (value << 1)
+        assert 0 <= value <= 2
+        self._weight - value
 
     @property
     def colour(self):
-        e = self.is_empty()
-        w = self.weight
+        w = self._weight
         if w == 0:
-            return "black" if e else "red"
-        elif w == 1:
+            return "red"
+        if w == 1:
             return "black"
         elif w == 2:
-            return "black"
+            return "doubleblack"
         else:
-            return "red"
+            return "red"    # 0
 
-EMPTY = Node(None)
-EMPTY.bits = 0
-EMPTY.left = EMPTY
-EMPTY.right = EMPTY
-
-BLACK_EMPTY = Node(None)
-BLACK_EMPTY.weight = 1
-BLACK_EMPTY.left = EMPTY
-BLACK_EMPTY.right = EMPTY
-
-
+EMPTY = EmptyNode()
+BLACKEMPTY = BlackEmptyNode()
 
 
 class RBTree:
-    def __init__(self):
-        self.root = None
 
-    def search(self, key):
+    def __init__(self):
+        self.root = EMPTY
+
+    def search(self, key) -> N
         currentNode = self.root
         while currentNode != None and key != currentNode.key:
             if key < currentNode.key:
